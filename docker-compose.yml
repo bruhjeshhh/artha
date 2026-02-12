@@ -1,0 +1,98 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: rentanalyzer-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: rentanalyzer
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 3s
+      timeout: 3s
+      retries: 5
+
+  user-service:
+    build: .
+    command: ["./user-service"]
+    ports:
+      - "8081:8081"
+    environment:
+      DB_URL: "host=postgres port=5432 user=postgres password=postgres dbname=rentanalyzer sslmode=disable"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  rental-service:
+    build: .
+    command: ["./rental-service"]
+    ports:
+      - "8082:8082"
+    environment:
+      DB_URL: "host=postgres port=5432 user=postgres password=postgres dbname=rentanalyzer sslmode=disable"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  grocery-service:
+    build: .
+    command: ["./grocery-service"]
+    ports:
+      - "8083:8083"
+    environment:
+      DB_URL: "host=postgres port=5432 user=postgres password=postgres dbname=rentanalyzer sslmode=disable"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  transport-service:
+    build: .
+    command: ["./transport-service"]
+    ports:
+      - "8084:8084"
+    environment:
+      DB_URL: "host=postgres port=5432 user=postgres password=postgres dbname=rentanalyzer sslmode=disable"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  inflation-service:
+    build: .
+    command: ["./inflation-service"]
+    ports:
+      - "8085:8085"
+    environment:
+      DB_URL: "host=postgres port=5432 user=postgres password=postgres dbname=rentanalyzer sslmode=disable"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  geospatial-service:
+    build: .
+    command: ["./geospatial-service"]
+    ports:
+      - "8086:8086"
+    environment:
+      DB_URL: "host=postgres port=5432 user=postgres password=postgres dbname=rentanalyzer sslmode=disable"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rental-service:
+        condition: service_started
+
+  cost-prediction-service:
+    build: .
+    command: ["./cost-prediction-service"]
+    ports:
+      - "8087:8087"
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:

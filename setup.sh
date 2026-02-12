@@ -28,9 +28,9 @@ echo "✅ Docker Compose found"
 echo "✅ Go found"
 echo ""
 
-# Start PostgreSQL
+# Start PostgreSQL only (services can be started with: make run-all)
 echo "🐘 Starting PostgreSQL container..."
-docker-compose up -d
+docker-compose up -d postgres
 
 # Wait for PostgreSQL to be ready
 echo "⏳ Waiting for PostgreSQL to be ready..."
@@ -50,12 +50,16 @@ go mod download
 
 echo ""
 echo "╔════════════════════════════════════════════════════════════╗"
-echo "║    Setup Complete! Ready to run the application.          ║"
+echo "║    Setup Complete! Ready to run the application.           ║"
 echo "╚════════════════════════════════════════════════════════════╝"
 echo ""
-echo "To start the application, run:"
-echo "  go run main.go"
+echo "Option A - Microservices (recommended):"
+echo "  make run-all    # Start all services in Docker"
+echo "  make run        # Run the CLI"
 echo ""
-echo "To stop PostgreSQL later, run:"
-echo "  docker-compose down"
+echo "Option B - Local binaries (after make build):"
+echo "  ./bin/user-service & ./bin/rental-service & ... (see Makefile)"
+echo "  make run        # Run the CLI"
+echo ""
+echo "To stop later: docker-compose down"
 echo ""

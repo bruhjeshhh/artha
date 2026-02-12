@@ -1,0 +1,10 @@
+# Build output
+bin/
+/cli
+/user-service
+/rental-service
+/grocery-service
+/transport-service
+/inflation-service
+/geospatial-service
+/cost-prediction-service

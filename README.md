@@ -1,19 +1,34 @@
-# Rent & Cost Analyzer - Terminal App
+# Rent & Cost Analyzer - Microservices
 
-A terminal-only application for analyzing rent and living costs in Ashta, Madhya Pradesh, with AI-powered predictions and geospatial analysis.
+A terminal application for analyzing rent and living costs in Ashta, Madhya Pradesh, with AI-powered predictions and geospatial analysis. The application is split into **microservices** plus a **CLI client**.
+
+## Architecture
+
+| Service | Port | Responsibility |
+|---------|------|----------------|
+| **user-service** | 8081 | User profile (create/get) |
+| **rental-service** | 8082 | Rent listings, AI classification summary, locality comparison, cost burden |
+| **grocery-service** | 8083 | Grocery pricing (BigBasket/Blinkit style) |
+| **transport-service** | 8084 | Transport routes, BCLL fares, isochrone |
+| **inflation-service** | 8085 | Inflation data (RBI/MP Govt style) |
+| **geospatial-service** | 8086 | Heatmap, nearby localities (PostGIS-style) |
+| **cost-prediction-service** | 8087 | XGBoost-style cost prediction (stateless) |
+| **CLI** | - | Terminal UI that calls all services |
+
+All data services share a single PostgreSQL database (same schema as before); each service owns its tables and seeds its own data on first run.
 
 ## Features
 
-- **AI-Powered Cost Prediction**: XGBoost regression model for personalized monthly cost predictions
-- **Smart Rent Classification**: PyTorch DistilBERT NLP model to classify listings as "fair" or "overpriced"
-- **Rent Analysis**: Scrape and analyze rental listings from NoBroker and OLX
-- **Grocery Pricing**: Integrate with BigBasket and Blinkit APIs for grocery cost analysis
-- **Transport Costs**: Fetch BCLL transport fares and calculate monthly commute costs
-- **Inflation Tracking**: Load and visualize RBI and MP Government inflation data
-- **Geospatial Analysis**: PostGIS-powered locality heatmaps, isochrone calculations, and nearby locality search
-- **Cost Burden Index**: Calculate and visualize cost burden as percentage of income
-- **Locality Comparison**: Compare costs across different localities
-- **User Profiling**: Form-based user profile for personalized predictions
+- **AI-Powered Cost Prediction**: XGBoost-style regression for personalized monthly cost predictions
+- **Smart Rent Classification**: Listings classified as "fair" or "overpriced"
+- **Rent Analysis**: Rental listings with locality and distance
+- **Grocery Pricing**: BigBasket/Blinkit-style grocery cost analysis
+- **Transport Costs**: BCLL-style transport fares and commute costs
+- **Inflation Tracking**: RBI/MP Government-style inflation data
+- **Geospatial Analysis**: Locality heatmaps, isochrones, nearby locality search
+- **Cost Burden Index**: Cost burden as percentage of income
+- **Locality Comparison**: Compare costs across localities
+- **User Profiling**: Profile for personalized predictions
 
 ## Tech Stack
 
@@ -21,111 +36,93 @@ A terminal-only application for analyzing rent and living costs in Ashta, Madhya
 - **Database**: PostgreSQL 15
 - **Container**: Docker & Docker Compose
 
-## Quick Setup
+## Quick Start
 
 ### Prerequisites
 
-- Go 1.21 or higher
+- Go 1.21+
 - Docker and Docker Compose
 
-### Installation
+### 1. Setup (PostgreSQL + deps)
 
-1. **Start PostgreSQL**:
 ```bash
-docker-compose up -d
+make setup
+# or: ./setup.sh
 ```
 
-2. **Install Go dependencies**:
+### 2. Run all microservices
+
 ```bash
-go mod download
+make run-all
+# Starts: postgres, user, rental, grocery, transport, inflation, geospatial, cost-prediction
 ```
 
-3. **Run the application**:
+### 3. Run the CLI
+
 ```bash
-go run main.go
+make run
+# or: go run ./cmd/cli
 ```
 
-The app will automatically:
-- Connect to PostgreSQL
-- Create necessary tables
-- Seed mock data (rental listings, groceries, transport routes, inflation data)
-- Present an interactive terminal menu
+The CLI talks to `localhost:8081-8087` by default. Override with:
 
-## Usage
+```bash
+SERVICES_HOST=localhost make run
+```
 
-### Main Menu Options
+## Local development (binaries)
 
-1. **Create User Profile** - Set up your personal details for customized predictions
-2. **Analyze Rent Listings** - View AI-classified rental properties (fair vs overpriced)
-3. **AI Cost Prediction** - Get XGBoost-powered monthly cost predictions
-4. **Grocery Pricing** - View BigBasket and Blinkit grocery costs
-5. **Transport Costs** - Calculate BCLL bus commute expenses
-6. **Inflation Data** - View RBI and MP Government inflation trends
-7. **Geospatial Analysis** - Heatmaps, isochrones, and nearby locality search
-8. **Compare Localities** - Side-by-side cost comparison between areas
-9. **Cost Burden Index** - See what percentage of income goes to living costs
+Build and run services locally against a running Postgres:
+
+```bash
+make db-start
+make build
+
+# In separate terminals (or background):
+./bin/user-service &
+./bin/rental-service &
+./bin/grocery-service &
+./bin/transport-service &
+./bin/inflation-service &
+./bin/geospatial-service &
+./bin/cost-prediction-service &
+
+make run
+```
+
+## Main Menu (CLI)
+
+1. **Create User Profile** – Name, income, family size, preferred locality, commute
+2. **Analyze Rent Listings** – AI-classified listings (fair/overpriced)
+3. **AI Cost Prediction** – XGBoost-style monthly cost prediction
+4. **Grocery Pricing** – Grocery items and monthly estimate
+5. **Transport Costs** – BCLL-style route and monthly cost
+6. **Inflation Data** – Inflation by month/category
+7. **Geospatial Analysis** – Heatmap, isochrone, nearby localities
+8. **Compare Localities** – Side-by-side cost comparison
+9. **Cost Burden Index** – Burden % by locality
 10. **Exit**
 
-### Sample Workflow
-```
-1. Create your user profile (Option 1)
-   - Enter name, income, family size, preferred locality, commute distance
+## Database
 
-2. View rent listings with AI classification (Option 2)
-   - See which properties are fair vs overpriced
+- **rental_listings** – rental-service
+- **groceries** – grocery-service
+- **transport_routes** – transport-service
+- **inflation_data** – inflation-service
+- **users** – user-service
 
-3. Get AI cost prediction (Option 3)
-   - XGBoost model predicts your total monthly costs
+Geospatial service reads `rental_listings` (read-only). Cost-prediction service is stateless and uses the user profile from the CLI request.
 
-4. Check cost burden index (Option 9)
-   - Understand affordability across different localities
-```
+## Makefile
 
-## Database Schema
-
-The app uses 4 main tables:
-
-- **rental_listings**: Property data with AI classification
-- **groceries**: Food items with prices from BigBasket/Blinkit
-- **transport_routes**: BCLL bus routes and fares
-- **inflation_data**: Historical inflation rates by category
-
-## Mock Data
-
-Since external APIs aren't available, the app generates realistic mock data:
-- 20 rental listings across 6 localities in Ashta
-- 8 common grocery items
-- Transport routes between all localities
-- 6 months of inflation data across 4 categories
-
-## Demo Notes
-
-This is a demo application with:
-- Simulated AI models (XGBoost, DistilBERT) for supervisor demonstration
-- Mock data that resembles real Ashta, MP data
-- Minimal infrastructure (just Go + PostgreSQL)
-- Terminal-only interface for simplicity
-
-## Troubleshooting
-
-**Connection refused to PostgreSQL**:
-```bash
-# Check if container is running
-docker ps
-
-# Restart if needed
-docker-compose restart
-
-# Check logs
-docker-compose logs postgres
-```
-
-**Port 5432 already in use**:
-```bash
-# Change port in docker-compose.yml to 5433:5432
-# Then update connection string in main.go
-```
+- `make help` – List commands
+- `make setup` – Setup DB and deps
+- `make build` – Build all binaries to `bin/`
+- `make run` / `make run-cli` – Run CLI
+- `make run-all` – Start all services with Docker Compose
+- `make db-start` / `make db-stop` / `make db-logs` – Postgres only
+- `make clean` – Stop containers, remove `bin/`
 
 ## License
 
-MIT License - Educational/Demo purposes
+MIT License – Educational/Demo purposes.
