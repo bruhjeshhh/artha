@@ -35,7 +35,7 @@ run run-cli:
 	@go run ./cmd/cli
 
 run-all:
-	@echo "🐳 Starting all microservices with Docker Compose..."
+	@echo "🐳 Starting all miccroservices with Docker Compose..."
 	@docker-compose up -d
 	@echo "✅ Services starting. Use 'make run' for CLI (SERVICES_HOST=localhost)."
 

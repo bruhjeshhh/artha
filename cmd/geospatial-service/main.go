@@ -105,6 +105,9 @@ func handleNearby(w http.ResponseWriter, r *http.Request) {
 		FROM rental_listings
 		WHERE locality != $1
 		ORDER BY distance
+
+
+		
 		LIMIT 10
 	`, locality)
 	if err != nil {
@@ -114,10 +117,10 @@ func handleNearby(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close()
 
 	type nearbyRow struct {
-		Locality  string  `json:"locality"`
-		Distance  float64 `json:"distance_km"`
-		Lat       float64 `json:"lat"`
-		Lon       float64 `json:"lon"`
+		Locality string  `json:"locality"`
+		Distance float64 `json:"distance_km"`
+		Lat      float64 `json:"lat"`
+		Lon      float64 `json:"lon"`
 	}
 
 	var list []nearbyRow

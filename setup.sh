@@ -1,9 +1,6 @@
 #!/bin/bash
 
-echo "╔════════════════════════════════════════════════════════════╗"
-echo "║    Rent & Cost Analyzer - Quick Setup Script              ║"
-echo "╚════════════════════════════════════════════════════════════╝"
-echo ""
+
 
 # Check if Docker is installed
 if ! command -v docker &> /dev/null; then
