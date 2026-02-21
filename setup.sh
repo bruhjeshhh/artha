@@ -5,11 +5,7 @@ echo "║    Rent & Cost Analyzer - Quick Setup Script              ║"
 echo "╚════════════════════════════════════════════════════════════╝"
 echo ""
 
-# Check if Docker is installed
-if ! command -v docker &> /dev/null; then
-    echo "❌ Docker not found. Please install Docker first."
-    exit 1
-fi
+
 
 # Check if Docker Compose is installed
 if ! command -v docker-compose &> /dev/null; then
